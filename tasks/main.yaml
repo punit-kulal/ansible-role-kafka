@@ -55,6 +55,15 @@
   retries: 3
   delay: 3
 
+- name: Download Prometheus JMX exporter
+  get_url:
+    url: "{{ prometheus_exporter__download_url }}"
+    dest: "{{ prometheus_exporter__download_destination }}"
+    mode: "0644"
+    timeout: 30
+  retries: 3
+  delay: 3
+  
 - name: Unpack Kafka
   become: true
   ansible.builtin.unarchive:
@@ -99,11 +108,18 @@
 
 - name: Add kafka environment file
   become: true
-  ansible.builtin.copy:
-    content: KAFKA_HEAP_OPTS="-Xmx{{ kafka_heap_size }} -Xms{{ kafka_heap_size }}"
+  ansible.builtin.template:
+    src: templates/kafka.env.j2
     dest: /etc/sysconfig/kafka
     mode: "0644"
   notify: Restart Kafka
+
+- name: Create JMX confiugration
+  become: true  
+  ansible.builtin.template:
+    src: templates/server.properties.j2
+    dest: /etc/sysconfig/jmx_exporter_config.yml
+    mode: "0644"
 
 - name: Install Kafka service definition
   become: true

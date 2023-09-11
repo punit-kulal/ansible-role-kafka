@@ -1,0 +1,108 @@
+hostPort: localhost:9999
+lowercaseOutputName: false
+whitelistObjectNames:
+  - kafka.server:*
+  - kafka.network:type=RequestMetrics,name=*,request=*,*
+  - kafka.network:type=SocketServer,name=*,*
+  - kafka.controller:type=ControllerStats,name=*,*
+  - kafka.controller:type=KafkaController,name=*,*
+  - kafka.log:type=LogFlushStats,*
+  - java.lang:name=*,type=GarbageCollector,*
+  - java.lang:type=Memory,*
+  - java.lang:type=Threading,*
+  - java.lang:type=OperatingSystem,*
+rules:
+- pattern: kafka.server<type=BrokerTopicMetrics, name=(.+), topic=(.+)><>Count
+  cache: true
+  name: kafka_server_BrokerTopicMetrics_$1
+  labels:
+    topic: $2
+
+- pattern: kafka.network<type=RequestMetrics, name=(.+)TimeMs\w*, request=(.+)><>(99|95|50)thPercentile
+  cache: true
+  name: kafka_network_RequestMetrics_$1TimeMs_$2_$3thPercentile
+
+- pattern: kafka.network<type=RequestMetrics, name=(RequestsPerSec|RequestBytes|TemporaryMemoryBytes), request=(.+)><>Count
+  cache: true
+  name: kafka_network_RequestMetrics_$1_$2_Count
+
+- pattern: kafka.network<type=RequestMetrics, name=ErrorsPerSec, request=(.+), error=(.+)><>Count
+  cache: true
+  name: kafka_broker_network_RequestMetrics_ErrorsPerSec
+  labels:
+    request: $1
+    error: $2
+
+- pattern: kafka.server<type=BrokerTopicMetrics, name=(MessagesInPerSec|BytesInPerSec|BytesOutPerSec|BytesRejectedPerSec)><>Count
+  cache: true
+  name: kafka_server_BrokerTopicMetrics_$1_total
+
+- pattern: kafka.server<type=ReplicaManager, name=(IsrShrinksPerSec|IsrExpandsPerSec|PartitionCount|LeaderCount|UnderMinIsrPartitionCount|UnderReplicatedPartitions)><>(Count|Value)
+  cache: true
+  name: kafka_server_ReplicaManager_$1
+
+- pattern: kafka.controller<type=KafkaController, name=(OfflinePartitionsCount|ActiveControllerCount)><>Value
+  cache: true
+  name: kafka_controller_KafkaController_$1
+
+- pattern: kafka.controller<type=ControllerStats, name=(LeaderElectionRateAndTimeMs|UncleanLeaderElectionsPerSec)><>(Count|99thPercentile)
+  cache: true
+  name: kafka_controller_ControllerStats_$1_$2
+
+- pattern: kafka.server<type=ReplicaFetcherManager, name=MaxLag, clientId=Replica><>Value
+  cache: true
+  name: kafka_server_ReplicaFetcherManager_MaxLag_Replica
+
+- pattern: kafka.server<type=DelayedOperationPurgatory, name=PurgatorySize, delayedOperation=(Produce|Fetch)><>Value
+  cache: true
+  name: kafka_server_DelayedOperationPurgatory_PurgatorySize_$1
+
+- pattern: kafka.network<type=SocketServer, name=NetworkProcessorAvgIdlePercent><>Value
+  cache: true
+  name: kafka_network_SocketServer_NetworkProcessorAvgIdlePercent
+
+- pattern: kafka.server<type=KafkaRequestHandlerPool, name=RequestHandlerAvgIdlePercent><>Count
+  cache: true
+  name: kafka_server_KafkaRequestHandlerPool_RequestHandlerAvgIdlePercent
+
+- pattern: kafka.server<type=ZooKeeperClientMetrics, name=ZooKeeperRequestLatencyMs><>99thPercentile
+  cache: true
+  name: kafka_server_ZooKeeperClientMetrics_ZooKeeperRequestLatencyMs_99thPercentile
+
+- pattern: kafka.server<type=SessionExpireListener, name=SessionState><>Count
+  cache: true
+  name: kafka_server_SessionExpireListener_SessionState
+
+- pattern: kafka.server<type=RequestChannel, name=RequestQueueSize><>Value
+  cache: true
+  name: kafka_broker_network_RequestChannel_RequestQueueSize
+
+- pattern: kafka.server<type=(Produce|Fetch|Request), user=(.+), clientId=(.+)><>Count
+  cache: true
+  name: kafka_server_$1
+  labels:
+    user: $2
+    clientId: $3
+
+- pattern: kafka.log<type=LogFlushStats, name=LogFlushRateAndTimeMs><>(Count|99thPercentile)
+  cache: true
+  name: kafka_log_LogFlushStats_LogFlushRateAndTimeMs_$1
+
+- pattern: 'java.lang<name=([\s\w]+), type=GarbageCollector>(.*): (\d+)'
+  name: jvm_gc_$2
+  value: $3
+  labels:
+    name: $1
+  type: GAUGE
+
+- pattern: 'java.lang<type=Memory><(\w+)MemoryUsage>(\w+): (\d+)'
+  name: jvm_memory_usage_$2_bytes
+  value: $3
+  labels:
+    area: $1
+  type: GAUGE
+
+- pattern: 'java.lang<type=(Threading|OperatingSystem)>(.*): (\d+)'
+  name: jvm_$1_$2
+  value: $3
+  type: GAUGE

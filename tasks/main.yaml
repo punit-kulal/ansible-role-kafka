@@ -130,27 +130,6 @@
     mode: "0644"
   notify: Restart Kafka
 
-### Skip add to group step since inventory is being created with the groups in place.
-# - name: Add controller nodes to group
-#   ansible.builtin.add_host:
-#     name: "{{ hostvars[item]['inventory_hostname'] }}"
-#     group: kafka__group_controller_nodes
-#   when: "'controller' in hostvars[item]['kafka_node_roles'] | default(kafka_node_roles)"
-#   loop: "{{ ansible_play_hosts }}"
-#   changed_when: false
-#   loop_control:
-#     label: "{{ hostvars[item]['inventory_hostname'] }}"
-
-# - name: Add broker nodes to group
-#   ansible.builtin.add_host:
-#     name: "{{ hostvars[item]['inventory_hostname'] }}"
-#     group: kafka__group_broker_nodes
-#   when: "'broker' in hostvars[item]['kafka_node_roles'] | default(kafka_node_roles)"
-#   loop: "{{ ansible_play_hosts }}"
-#   changed_when: false
-#   loop_control:
-#     label: "{{ hostvars[item]['inventory_hostname'] }}"
-
 - name: Configure Kafka
   become: true
   become_user: "{{ kafka_user }}"

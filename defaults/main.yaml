@@ -47,9 +47,7 @@ kafka_log_dirs:
   - /data/kafka
 
 ## Server basics
-kafka_node_roles:
-  - broker
-  - controller
+
 
 ## Internal topic settings
 kafka_offsets_topic_replication_factor: 1

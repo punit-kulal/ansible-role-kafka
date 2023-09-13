@@ -118,7 +118,7 @@
 - name: Create JMX confiugration
   become: true  
   ansible.builtin.template:
-    src: templates/server.properties.j2
+    src: templates/jmx_exporter_config.j2
     dest: /etc/sysconfig/jmx_exporter_config.yml
     mode: "0644"
 
